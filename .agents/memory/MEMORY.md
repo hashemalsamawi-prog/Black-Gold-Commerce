@@ -1,0 +1,1 @@
+- [Black Gold e-commerce platform](black-gold-platform.md) — bilingual AR/EN luxury dates/honey e-commerce; full stack with React+Vite frontend and Express API.

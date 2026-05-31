@@ -1,22 +1,25 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Black Gold e-commerce API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: products
+  - name: categories
+  - name: cart
+  - name: orders
+  - name: customers
+  - name: wholesale
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +27,754 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List all product categories
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+
+  /products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List products with optional filters
+      parameters:
+        - name: categoryId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: search
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: minPrice
+          in: query
+          schema:
+            type: ["number", "null"]
+        - name: maxPrice
+          in: query
+          schema:
+            type: ["number", "null"]
+        - name: inStock
+          in: query
+          schema:
+            type: ["boolean", "null"]
+        - name: featured
+          in: query
+          schema:
+            type: ["boolean", "null"]
+      responses:
+        "200":
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+
+  /products/featured:
+    get:
+      operationId: getFeaturedProducts
+      tags: [products]
+      summary: Get featured products for homepage
+      responses:
+        "200":
+          description: Featured products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+
+  /products/catalog-summary:
+    get:
+      operationId: getCatalogSummary
+      tags: [products]
+      summary: Product counts and stats by category
+      responses:
+        "200":
+          description: Catalog summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogSummary"
+
+  /products/{id}:
+    get:
+      operationId: getProduct
+      tags: [products]
+      summary: Get product detail with variants
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Product detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductDetail"
+        "404":
+          description: Not found
+
+  /products/{id}/related:
+    get:
+      operationId: getRelatedProducts
+      tags: [products]
+      summary: Get related products
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Related products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+
+  /cart:
+    get:
+      operationId: getCart
+      tags: [cart]
+      summary: Get cart contents
+      parameters:
+        - name: sessionId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+
+  /cart/items:
+    post:
+      operationId: addToCart
+      tags: [cart]
+      summary: Add item to cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CartItemInput"
+      responses:
+        "201":
+          description: Cart updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+
+  /cart/items/{itemId}:
+    patch:
+      operationId: updateCartItem
+      tags: [cart]
+      summary: Update cart item quantity
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CartItemUpdate"
+      responses:
+        "200":
+          description: Cart updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+    delete:
+      operationId: removeCartItem
+      tags: [cart]
+      summary: Remove item from cart
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CartSessionInput"
+      responses:
+        "200":
+          description: Cart updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+
+  /cart/clear:
+    delete:
+      operationId: clearCart
+      tags: [cart]
+      summary: Clear cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CartSessionInput"
+      responses:
+        "200":
+          description: Cart cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+
+  /orders:
+    post:
+      operationId: createOrder
+      tags: [orders]
+      summary: Place an order (checkout)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderInput"
+      responses:
+        "201":
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /orders/{id}:
+    get:
+      operationId: getOrder
+      tags: [orders]
+      summary: Get order by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          description: Not found
+
+  /customers/register:
+    post:
+      operationId: registerCustomer
+      tags: [customers]
+      summary: Register a new customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerRegisterInput"
+      responses:
+        "201":
+          description: Customer registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerSession"
+
+  /customers/login:
+    post:
+      operationId: loginCustomer
+      tags: [customers]
+      summary: Customer login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerLoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerSession"
+        "401":
+          description: Invalid credentials
+
+  /customers/{id}/orders:
+    get:
+      operationId: getCustomerOrders
+      tags: [customers]
+      summary: Get customer order history
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Customer orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+
+  /customers/{id}/profile:
+    get:
+      operationId: getCustomerProfile
+      tags: [customers]
+      summary: Get customer profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Customer profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+        "404":
+          description: Not found
+
+  /wholesale/inquiries:
+    post:
+      operationId: submitWholesaleInquiry
+      tags: [wholesale]
+      summary: Submit B2B/wholesale inquiry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WholesaleInquiryInput"
+      responses:
+        "201":
+          description: Inquiry submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WholesaleInquiry"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    Category:
+      type: object
+      required: [id, nameAr, nameEn, slug, productCount]
+      properties:
+        id:
+          type: integer
+        nameAr:
+          type: string
+        nameEn:
+          type: string
+        slug:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        productCount:
+          type: integer
+
+    ProductVariant:
+      type: object
+      required: [id, productId, nameAr, nameEn, price, sku]
+      properties:
+        id:
+          type: integer
+        productId:
+          type: integer
+        nameAr:
+          type: string
+        nameEn:
+          type: string
+        price:
+          type: number
+        originalPrice:
+          type: ["number", "null"]
+        sku:
+          type: string
+        stock:
+          type: integer
+        weightGrams:
+          type: ["integer", "null"]
+        imageUrl:
+          type: ["string", "null"]
+
+    Product:
+      type: object
+      required: [id, nameAr, nameEn, descriptionAr, descriptionEn, categoryId, basePrice, imageUrl, inStock, featured, slug]
+      properties:
+        id:
+          type: integer
+        nameAr:
+          type: string
+        nameEn:
+          type: string
+        descriptionAr:
+          type: string
+        descriptionEn:
+          type: string
+        categoryId:
+          type: integer
+        categoryNameAr:
+          type: ["string", "null"]
+        categoryNameEn:
+          type: ["string", "null"]
+        basePrice:
+          type: number
+        imageUrl:
+          type: string
+        gallery:
+          type: array
+          items:
+            type: string
+        inStock:
+          type: boolean
+        featured:
+          type: boolean
+        slug:
+          type: string
+        rating:
+          type: ["number", "null"]
+        reviewCount:
+          type: ["integer", "null"]
+        badge:
+          type: ["string", "null"]
+
+    ProductDetail:
+      allOf:
+        - $ref: "#/components/schemas/Product"
+        - type: object
+          required: [variants]
+          properties:
+            variants:
+              type: array
+              items:
+                $ref: "#/components/schemas/ProductVariant"
+
+    CatalogSummary:
+      type: object
+      required: [totalProducts, totalCategories, inStockCount, featuredCount, categoryBreakdown]
+      properties:
+        totalProducts:
+          type: integer
+        totalCategories:
+          type: integer
+        inStockCount:
+          type: integer
+        featuredCount:
+          type: integer
+        categoryBreakdown:
+          type: array
+          items:
+            type: object
+            required: [categoryId, nameAr, nameEn, count]
+            properties:
+              categoryId:
+                type: integer
+              nameAr:
+                type: string
+              nameEn:
+                type: string
+              count:
+                type: integer
+
+    CartItem:
+      type: object
+      required: [id, sessionId, productId, variantId, productNameAr, productNameEn, variantNameAr, variantNameEn, price, quantity, imageUrl]
+      properties:
+        id:
+          type: integer
+        sessionId:
+          type: string
+        productId:
+          type: integer
+        variantId:
+          type: integer
+        productNameAr:
+          type: string
+        productNameEn:
+          type: string
+        variantNameAr:
+          type: string
+        variantNameEn:
+          type: string
+        price:
+          type: number
+        quantity:
+          type: integer
+        imageUrl:
+          type: string
+
+    Cart:
+      type: object
+      required: [sessionId, items, subtotal, itemCount]
+      properties:
+        sessionId:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CartItem"
+        subtotal:
+          type: number
+        itemCount:
+          type: integer
+
+    CartItemInput:
+      type: object
+      required: [sessionId, productId, variantId, quantity]
+      properties:
+        sessionId:
+          type: string
+        productId:
+          type: integer
+        variantId:
+          type: integer
+        quantity:
+          type: integer
+
+    CartItemUpdate:
+      type: object
+      required: [sessionId, quantity]
+      properties:
+        sessionId:
+          type: string
+        quantity:
+          type: integer
+
+    CartSessionInput:
+      type: object
+      required: [sessionId]
+      properties:
+        sessionId:
+          type: string
+
+    OrderItem:
+      type: object
+      required: [id, orderId, productId, variantId, productNameAr, productNameEn, variantNameAr, variantNameEn, price, quantity]
+      properties:
+        id:
+          type: integer
+        orderId:
+          type: integer
+        productId:
+          type: integer
+        variantId:
+          type: integer
+        productNameAr:
+          type: string
+        productNameEn:
+          type: string
+        variantNameAr:
+          type: string
+        variantNameEn:
+          type: string
+        price:
+          type: number
+        quantity:
+          type: integer
+
+    Order:
+      type: object
+      required: [id, customerName, customerEmail, customerPhone, deliveryAddress, city, paymentMethod, status, subtotal, total, items, createdAt]
+      properties:
+        id:
+          type: integer
+        customerId:
+          type: ["integer", "null"]
+        customerName:
+          type: string
+        customerEmail:
+          type: string
+        customerPhone:
+          type: string
+        deliveryAddress:
+          type: string
+        city:
+          type: string
+        notes:
+          type: ["string", "null"]
+        paymentMethod:
+          type: string
+        status:
+          type: string
+        subtotal:
+          type: number
+        deliveryFee:
+          type: number
+        total:
+          type: number
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        createdAt:
+          type: string
+
+    OrderInput:
+      type: object
+      required: [customerName, customerEmail, customerPhone, deliveryAddress, city, paymentMethod, sessionId]
+      properties:
+        customerId:
+          type: ["integer", "null"]
+        customerName:
+          type: string
+        customerEmail:
+          type: string
+        customerPhone:
+          type: string
+        deliveryAddress:
+          type: string
+        city:
+          type: string
+        notes:
+          type: ["string", "null"]
+        paymentMethod:
+          type: string
+        sessionId:
+          type: string
+
+    Customer:
+      type: object
+      required: [id, name, email, phone, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        city:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    CustomerSession:
+      type: object
+      required: [customer, token]
+      properties:
+        customer:
+          $ref: "#/components/schemas/Customer"
+        token:
+          type: string
+
+    CustomerRegisterInput:
+      type: object
+      required: [name, email, phone, password]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        password:
+          type: string
+        city:
+          type: ["string", "null"]
+
+    CustomerLoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    WholesaleInquiry:
+      type: object
+      required: [id, companyName, contactName, email, phone, productInterest, estimatedQuantity, status, createdAt]
+      properties:
+        id:
+          type: integer
+        companyName:
+          type: string
+        contactName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        productInterest:
+          type: string
+        estimatedQuantity:
+          type: string
+        message:
+          type: ["string", "null"]
+        status:
+          type: string
+        createdAt:
+          type: string
+
+    WholesaleInquiryInput:
+      type: object
+      required: [companyName, contactName, email, phone, productInterest, estimatedQuantity]
+      properties:
+        companyName:
+          type: string
+        contactName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        productInterest:
+          type: string
+        estimatedQuantity:
+          type: string
+        message:
+          type: ["string", "null"]

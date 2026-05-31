@@ -1,0 +1,20 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "ToyU0OQGxxIL58iy6TgaA"
+uri = "file://artifacts/black-gold/public/images/hero.png"
+type = "image"
+title = "Luxury dates in gold bowl"
+
+[[generated]]
+id = "zSlbBCceRyxQF3IC58wYD"
+uri = "file://artifacts/black-gold/public/images/olive-oil.png"
+type = "image"
+title = "Premium olive oil bottle"
+
+[[generated]]
+id = "x46kkdtTeSSPgxxFlkjF7"
+uri = "file://artifacts/black-gold/public/images/honey.png"
+type = "image"
+title = "Raw luxury honey jar"

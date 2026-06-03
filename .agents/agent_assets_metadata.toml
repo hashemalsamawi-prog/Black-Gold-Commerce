@@ -1,5 +1,4 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "ToyU0OQGxxIL58iy6TgaA"
@@ -18,3 +17,9 @@ id = "x46kkdtTeSSPgxxFlkjF7"
 uri = "file://artifacts/black-gold/public/images/honey.png"
 type = "image"
 title = "Raw luxury honey jar"
+
+[[outputs]]
+id = "gOEgSMOr0bJik8Fe74PgJ"
+uri = "file://black-gold-backup.tar.gz"
+type = "unspecified"
+title = "Black Gold — نسخة احتياطية كاملة"

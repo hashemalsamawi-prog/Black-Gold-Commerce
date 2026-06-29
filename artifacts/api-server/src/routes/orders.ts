@@ -7,9 +7,65 @@ import {
   GetOrderParams,
   GetOrderResponse,
 } from "@workspace/api-zod";
+import { appendFileSync, existsSync } from "fs";
+import { join } from "path";
 
 const router: IRouter = Router();
 
+const CSV_PATH = join(process.cwd(), "orders.csv");
+const CSV_HEADER = "ID,Date,CustomerName,Phone,City,Address,PaymentMethod,Subtotal,DeliveryFee,Total,Notes,Items\n";
+
+function appendOrderToCsv(order: {
+  id: number;
+  createdAt: Date;
+  customerName: string;
+  customerPhone: string;
+  city: string;
+  deliveryAddress: string;
+  paymentMethod: string;
+  subtotal: number;
+  deliveryFee: number;
+  total: number;
+  notes: string | null;
+}, items: Array<{ productNameAr: string; quantity: number; price: number }>) {
+  try {
+    if (!existsSync(CSV_PATH)) {
+      appendFileSync(CSV_PATH, CSV_HEADER, "utf8");
+    }
+    const escape = (s: string) => `"${String(s).replace(/"/g, '""')}"`;
+    const itemSummary = items.map((i) => `${i.productNameAr}×${i.quantity}@${i.price}`).join("; ");
+    const row = [
+      order.id,
+      order.createdAt.toISOString(),
+      escape(order.customerName),
+      escape(order.customerPhone),
+      escape(order.city),
+      escape(order.deliveryAddress),
+      escape(order.paymentMethod),
+      order.subtotal.toFixed(2),
+      order.deliveryFee.toFixed(2),
+      order.total.toFixed(2),
+      escape(order.notes ?? ""),
+      escape(itemSummary),
+    ].join(",") + "\n";
+    appendFileSync(CSV_PATH, row, "utf8");
+  } catch {
+    // Non-fatal: log failure but don't block the response
+  }
+}
+
+/* ─── Export CSV ─── */
+router.get("/orders/export/csv", (_req, res): void => {
+  if (!existsSync(CSV_PATH)) {
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", 'attachment; filename="orders.csv"');
+    res.send(CSV_HEADER);
+    return;
+  }
+  res.download(CSV_PATH, "orders.csv");
+});
+
+/* ─── Create order ─── */
 router.post("/orders", async (req, res): Promise<void> => {
   const parsed = CreateOrderBody.safeParse(req.body);
   if (!parsed.success) {
@@ -67,9 +123,13 @@ router.post("/orders", async (req, res): Promise<void> => {
 
   await db.delete(cartItemsTable).where(eq(cartItemsTable.sessionId, sessionId));
 
+  // Append to CSV (non-blocking)
+  appendOrderToCsv(order, cartItems);
+
   res.status(201).json(GetOrderResponse.parse({ ...order, items }));
 });
 
+/* ─── Get order by ID ─── */
 router.get("/orders/:id", async (req, res): Promise<void> => {
   const params = GetOrderParams.safeParse(req.params);
   if (!params.success) {

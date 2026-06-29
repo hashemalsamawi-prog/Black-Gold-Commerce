@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { Minus, Plus, X, ShoppingBag, ArrowRight } from "lucide-react";
+import { Minus, Plus, X, ShoppingBag, ArrowRight, Flame } from "lucide-react";
 import {
   useGetCart,
   getGetCartQueryKey,
@@ -124,6 +124,7 @@ export default function Cart() {
                         src={item.imageUrl}
                         alt={t(item.productNameAr, item.productNameEn)}
                         className="w-full h-full object-cover"
+                        loading="lazy"
                       />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -194,13 +195,40 @@ export default function Cart() {
                     </span>
                   </div>
                   {cart.subtotal < 500 && (
-                    <p className="text-xs text-muted-foreground">
-                      {t(`أضف ${(500 - cart.subtotal).toFixed(0)} ر.س للتوصيل المجاني`, `Add ${(500 - cart.subtotal).toFixed(0)} SAR for free delivery`)}
-                    </p>
+                    <div className="p-3 bg-primary/5 border border-primary/20 text-xs text-primary text-center tracking-wide">
+                      {t(`أضف ${(500 - cart.subtotal).toFixed(0)} ر.س للتوصيل المجاني 🎁`, `Add ${(500 - cart.subtotal).toFixed(0)} SAR for free delivery 🎁`)}
+                    </div>
                   )}
                 </div>
 
                 <div className="gold-divider mb-6" />
+
+                {/* 🔥 Upsell Banner */}
+                {cart.subtotal < 400 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-6 p-4 border border-primary/30 bg-accent/30"
+                  >
+                    <div className="flex items-start gap-2">
+                      <Flame className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-xs font-medium text-foreground mb-1">
+                          {t("جلستك تستاهل أكثر!", "Your session deserves more!")}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed">
+                          {t("أضف عبوة 500 جرام إضافية واجعل جلستك مثالية طوال الليل!", "Add an extra 500g pack for a perfect session all night long!")}
+                        </p>
+                        <Link
+                          href="/products"
+                          className="inline-block mt-2 text-[10px] tracking-widest uppercase text-primary hover:underline"
+                        >
+                          {t("إضافة المزيد ←", "Add More →")}
+                        </Link>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
 
                 <div className="flex justify-between font-bold text-lg mb-8">
                   <span>{t("الإجمالي", "Total")}</span>

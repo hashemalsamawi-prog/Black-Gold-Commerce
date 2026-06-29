@@ -2,6 +2,7 @@ import { Navbar } from "./navbar";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { useLang } from "@/contexts/LanguageContext";
 import { siteConfig } from "@/data/config";
+import { useSocialProof } from "@/hooks/use-social-proof";
 
 const logoImg = "/brand/logo-transparent.png";
 
@@ -23,9 +24,27 @@ function FacebookIcon({ className }: { className?: string }) {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { t } = useLang();
+  useSocialProof();
 
   return (
     <div className="relative flex min-h-screen flex-col bg-background text-foreground">
+      {/* Promo Bar */}
+      <div className="bg-primary text-primary-foreground overflow-hidden py-2 relative z-50">
+        <div className="marquee-track text-[9px] tracking-[0.2em] uppercase font-bold">
+          {[1, 2].map((copy) => (
+            <div key={copy} className="flex items-center gap-8 whitespace-nowrap px-10">
+              <span>🚚 {t("توصيل مجاني لطلبات الجملة", "Free delivery on wholesale orders")}</span>
+              <span className="opacity-40">◆</span>
+              <span>👑 {t("جودة فحم محلية بمواصفات عالمية", "Local charcoal · world-class quality")}</span>
+              <span className="opacity-40">◆</span>
+              <span>🔥 {t("اشتعال فوري · بدون روائح", "Instant ignition · Odorless")}</span>
+              <span className="opacity-40">◆</span>
+              <span>📦 {t("توصيل خلال 24 ساعة", "Delivery within 24 hours")}</span>
+              <span className="opacity-40">◆</span>
+            </div>
+          ))}
+        </div>
+      </div>
       <Navbar />
       <main className="flex-1">{children}</main>
 

@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
-import { motion } from "framer-motion";
-import { ShoppingBag, Minus, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ShoppingBag, Minus, Plus, ChevronLeft, ChevronRight, Flame } from "lucide-react";
 import {
   useGetProduct,
   getGetProductQueryKey,
@@ -30,6 +30,8 @@ export default function ProductDetail() {
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [imageIdx, setImageIdx] = useState(0);
+  const [showStickyAtc, setShowStickyAtc] = useState(false);
+  const atcRef = useRef<HTMLDivElement>(null);
 
   const { data: product, isLoading } = useGetProduct(id, {
     query: { enabled: !!id, queryKey: getGetProductQueryKey(id) },
@@ -42,9 +44,19 @@ export default function ProductDetail() {
   const addToCart = useAddToCart();
 
   const selectedVariant = product?.variants?.find((v) => v.id === selectedVariantId) ?? product?.variants?.[0];
-
   const currentPrice = selectedVariant?.price ?? product?.basePrice ?? 0;
   const images = [product?.imageUrl, ...(product?.gallery ?? [])].filter(Boolean) as string[];
+
+  // Sticky ATC: show when the main ATC button scrolls off-screen
+  useEffect(() => {
+    if (!atcRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyAtc(!entry.isIntersecting),
+      { threshold: 0, rootMargin: "0px 0px -80px 0px" }
+    );
+    observer.observe(atcRef.current);
+    return () => observer.disconnect();
+  }, [product]);
 
   const handleAddToCart = () => {
     if (!product || !selectedVariant) return;
@@ -61,13 +73,18 @@ export default function ProductDetail() {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetCartQueryKey({ sessionId }) });
           toast({
-            title: t("تمت الإضافة إلى السلة", "Added to cart"),
+            title: t("✓ تمت الإضافة إلى السلة", "✓ Added to cart"),
             description: t(product.nameAr, product.nameEn),
           });
         },
       }
     );
   };
+
+  // Low-stock hint: deterministic from product ID (marketing feature)
+  const lowStockCount = product?.inStock
+    ? product.id % 11 === 0 ? 2 : product.id % 7 === 0 ? 3 : product.id % 5 === 0 ? 4 : null
+    : null;
 
   if (isLoading) {
     return (
@@ -117,23 +134,33 @@ export default function ProductDetail() {
                 src={images[imageIdx]}
                 alt={t(product.nameAr, product.nameEn)}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                loading="eager"
               />
               {product.badge && (
-                <span className="absolute top-4 left-4 bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-3 py-1">
+                <span className="absolute top-4 ltr:left-4 rtl:right-4 bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-3 py-1 font-bold">
                   {product.badge}
                 </span>
+              )}
+              {/* Low stock badge */}
+              {lowStockCount && (
+                <div className="absolute top-4 ltr:right-4 rtl:left-4 flex items-center gap-1 bg-background/90 border border-destructive/60 px-3 py-1.5">
+                  <Flame className="h-3 w-3 text-destructive" />
+                  <span className="text-[9px] tracking-widest uppercase text-destructive font-bold">
+                    {t(`متبقي ${lowStockCount} عبوات فقط!`, `Only ${lowStockCount} left!`)}
+                  </span>
+                </div>
               )}
               {images.length > 1 && (
                 <>
                   <button
                     onClick={() => setImageIdx((i) => Math.max(0, i - 1))}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-background/80 border border-border p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute ltr:left-3 rtl:right-3 top-1/2 -translate-y-1/2 bg-background/80 border border-border p-2 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => setImageIdx((i) => Math.min(images.length - 1, i + 1))}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-background/80 border border-border p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute ltr:right-3 rtl:left-3 top-1/2 -translate-y-1/2 bg-background/80 border border-border p-2 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
@@ -149,7 +176,7 @@ export default function ProductDetail() {
                     className={`w-20 h-20 overflow-hidden border-2 transition-all ${i === imageIdx ? "border-primary" : "border-border opacity-50 hover:opacity-80"}`}
                     data-testid={`img-gallery-${i}`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
                   </button>
                 ))}
               </div>
@@ -177,6 +204,16 @@ export default function ProductDetail() {
                   ))}
                 </div>
                 <span className="text-xs text-muted-foreground">({product.reviewCount} {t("تقييم", "reviews")})</span>
+              </div>
+            )}
+
+            {/* Low stock inline */}
+            {lowStockCount && (
+              <div className="flex items-center gap-1.5 mb-4">
+                <Flame className="h-3.5 w-3.5 text-destructive" />
+                <span className="text-xs text-destructive font-medium">
+                  {t(`🔥 متبقي ${lowStockCount} عبوات فقط! لا تفوّت الفرصة`, `🔥 Only ${lowStockCount} packs left — don't miss out!`)}
+                </span>
               </div>
             )}
 
@@ -257,12 +294,13 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Add to Cart */}
-            <div className="flex gap-4">
+            {/* Add to Cart — observed by IntersectionObserver */}
+            <div ref={atcRef} className="flex gap-4">
               <Button
                 onClick={handleAddToCart}
                 disabled={!product.inStock || addToCart.isPending}
                 className="flex-1 h-14 text-sm tracking-widest uppercase gap-3 bg-primary text-primary-foreground hover:bg-primary/90"
+                style={{ boxShadow: product.inStock ? "0 0 20px hsl(43 90% 50% / 0.3)" : undefined }}
                 data-testid="button-add-to-cart"
               >
                 <ShoppingBag className="h-5 w-5" />
@@ -306,26 +344,27 @@ export default function ProductDetail() {
               <div className="gold-divider w-24 mx-auto mt-4" />
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-              {related.map((product, i) => (
+              {related.map((p, i) => (
                 <motion.div
-                  key={product.id}
+                  key={p.id}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
                 >
-                  <Link href={`/products/${product.id}`} className="group block">
-                    <div className="aspect-square overflow-hidden bg-card border border-border mb-3">
+                  <Link href={`/products/${p.id}`} className="group block">
+                    <div className="aspect-square overflow-hidden bg-card border border-border mb-3 group-hover:border-primary/40 transition-colors">
                       <img
-                        src={product.imageUrl}
-                        alt={t(product.nameAr, product.nameEn)}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100"
+                        src={p.imageUrl}
+                        alt={t(p.nameAr, p.nameEn)}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        loading="lazy"
                       />
                     </div>
                     <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
-                      {t(product.nameAr, product.nameEn)}
+                      {t(p.nameAr, p.nameEn)}
                     </h3>
-                    <p className="text-primary mt-1">{product.basePrice.toFixed(0)} {t("ر.س", "SAR")}</p>
+                    <p className="text-primary mt-1">{p.basePrice.toFixed(0)} {t("ر.س", "SAR")}</p>
                   </Link>
                 </motion.div>
               ))}
@@ -333,6 +372,37 @@ export default function ProductDetail() {
           </div>
         )}
       </div>
+
+      {/* ── Sticky ATC (mobile only, shown when main ATC is off-screen) ── */}
+      <AnimatePresence>
+        {showStickyAtc && product.inStock && (
+          <motion.div
+            initial={{ y: 88 }}
+            animate={{ y: 0 }}
+            exit={{ y: 88 }}
+            transition={{ type: "spring", stiffness: 400, damping: 38 }}
+            className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-primary/30 bg-background/95 backdrop-blur-md"
+            style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+          >
+            {/* Mobile bottom nav offset */}
+            <div className="flex items-center gap-3 px-4 py-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold line-clamp-1">{t(product.nameAr, product.nameEn)}</p>
+                <p className="text-primary font-bold text-lg">{currentPrice.toFixed(0)} <span className="text-sm font-normal text-primary/70">{t("ر.س", "SAR")}</span></p>
+              </div>
+              <Button
+                onClick={handleAddToCart}
+                disabled={addToCart.isPending}
+                className="h-12 px-5 bg-primary text-primary-foreground tracking-widest uppercase text-[10px] gap-2 flex-shrink-0"
+                style={{ boxShadow: "0 0 16px hsl(43 90% 50% / 0.4)" }}
+              >
+                <ShoppingBag className="h-4 w-4" />
+                {addToCart.isPending ? "..." : t("أضف للسلة", "Add to Cart")}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

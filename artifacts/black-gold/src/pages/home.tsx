@@ -1,6 +1,7 @@
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { motion } from "framer-motion";
-import { ArrowRight, ShieldCheck, Truck, Star, Users } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, ShieldCheck, Truck, Star, Users, ChevronDown, Quote } from "lucide-react";
 import {
   useGetFeaturedProducts,
   useListCategories,
@@ -15,6 +16,153 @@ import adSession from "@assets/1765637518994_1780351507902.jpg";
 import adGrid from "@assets/1765636966973_1780351508012.jpg";
 import displayRack from "@assets/1765642864732_1780351507862.jpg";
 import deliveryBike from "@assets/1765572227744_1780351507997.jpg";
+
+/* ── FAQ Accordion ── */
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-b border-border last:border-b-0">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between py-5 text-right gap-6 hover:text-primary transition-colors group"
+      >
+        <span className="font-medium tracking-wide leading-relaxed">{q}</span>
+        <ChevronDown className={`h-4 w-4 text-primary flex-shrink-0 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="answer"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <p className="text-muted-foreground leading-relaxed pb-6 pr-2">{a}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function FaqAccordion() {
+  const { t } = useLang();
+  const faqs = [
+    {
+      q: t("كم مدة احتراق فحم الذهب الأسود؟", "How long does Black Gold charcoal last?"),
+      a: t("يحترق فحمنا لمدة 60-90 دقيقة بشكل مستمر — ضعف مدة الفحم العادي تقريباً. مصنوع من أجود أنواع الخشب الطبيعي ليمنحك جلسة كاملة بدون انقطاع.", "Our charcoal burns for 60–90 minutes continuously — roughly twice as long as ordinary charcoal. Made from premium natural hardwood for an uninterrupted full session."),
+    },
+    {
+      q: t("هل الفحم بدون روائح تماماً؟", "Is the charcoal truly odorless?"),
+      a: t("نعم تماماً. فحمنا مصنوع من خشب طبيعي خالص بدون أي إضافات كيميائية أو ملونات، مما يضمن عدم وجود أي روائح كريهة تؤثر على طعم الشيشة.", "Absolutely. Our charcoal uses pure natural wood with no chemical additives or dyes — ensuring zero unpleasant odors that could affect your shisha flavour."),
+    },
+    {
+      q: t("كيف يتم التوصيل وما المدة؟", "How does delivery work and how long does it take?"),
+      a: t("نوصل داخل المدينة خلال 24 ساعة. التوصيل مجاني للطلبات التي تزيد عن 500 ريال، وبرسوم رمزية 30 ريال للطلبات الأقل. نستخدم شركات شحن موثوقة.", "We deliver within the city within 24 hours. Free delivery on orders over 500 SAR; just 30 SAR flat below that. We use trusted courier services to ensure your order arrives safely."),
+    },
+    {
+      q: t("ما أحجام العبوات المتوفرة؟", "What pack sizes are available?"),
+      a: t("نوفر عبوات 250 جرام للاستخدام الشخصي، و500 جرام للجلسات الطويلة أو العائلية. كما تتوفر طلبات الجملة بأحجام تجارية مخصصة للمقاهي والتجار.", "We offer 250g packs for personal use and 500g packs for long or family sessions. Custom commercial sizes are available for wholesale café and trade orders."),
+    },
+    {
+      q: t("هل تتوفر طلبات الجملة؟", "Are wholesale orders available?"),
+      a: t("نعم! نقدم أسعاراً خاصة وشروطاً مميزة للمقاهي والتجار والموزعين. تواصل معنا عبر واتساب أو نموذج الجملة للحصول على عرض سعر مخصص.", "Yes! We offer special pricing and terms for cafés, merchants, and distributors. Reach us via WhatsApp or the wholesale inquiry form for a custom quote."),
+    },
+    {
+      q: t("ما طرق الدفع المقبولة؟", "What payment methods are accepted?"),
+      a: t("نقبل الدفع عند الاستلام (كاش)، والتحويل عبر المحافظ الإلكترونية اليمنية: فلوسك، جيب، جوالي، وموبايل موني.", "We accept cash on delivery, and transfers via Yemeni e-wallets: Flousak, Jeeb, Jawali, and Mobile Money."),
+    },
+  ];
+  return (
+    <div className="bg-card border border-border px-6 md:px-10">
+      {faqs.map((faq, i) => <FaqItem key={i} q={faq.q} a={faq.a} />)}
+    </div>
+  );
+}
+
+/* ── Testimonials Slider ── */
+const TESTIMONIALS = [
+  {
+    nameAr: "محمد العمري",
+    nameEn: "Mohammed Al-Omari",
+    cityAr: "صنعاء",
+    cityEn: "Sana'a",
+    rating: 5,
+    textAr: "أفضل فحم شيشة جربته في حياتي. الاشتعال فوري والرائحة منعدمة تماماً. جلسات لا تُنسى مع الذهب الأسود!",
+    textEn: "Best hookah charcoal I've ever tried. Instant ignition and completely odorless. Unforgettable sessions with Black Gold!",
+  },
+  {
+    nameAr: "أحمد العبدلي",
+    nameEn: "Ahmed Al-Abdali",
+    cityAr: "عدن",
+    cityEn: "Aden",
+    rating: 5,
+    textAr: "الفحم يدوم طوال الجلسة دون الحاجة إلى إعادة إشعال أبداً. جودة استثنائية وسعر ممتاز. أنصح به بشدة!",
+    textEn: "The charcoal lasts the entire session without ever needing re-ignition. Exceptional quality and great price. Highly recommended!",
+  },
+  {
+    nameAr: "خالد المحمدي",
+    nameEn: "Khaled Al-Mohammadi",
+    cityAr: "تعز",
+    cityEn: "Taiz",
+    rating: 5,
+    textAr: "توصيل سريع جداً وتغليف احترافي. الفحم أفضل بكثير مما توقعت — سأطلب كميات أكبر المرة القادمة بالتأكيد!",
+    textEn: "Very fast delivery and professional packaging. The charcoal is far better than I expected — I'll definitely order larger quantities next time!",
+  },
+] as const;
+
+function TestimonialsSlider() {
+  const { t } = useLang();
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setActive((a) => (a + 1) % TESTIMONIALS.length), 5000);
+    return () => clearInterval(id);
+  }, []);
+
+  const review = TESTIMONIALS[active];
+
+  return (
+    <div>
+      <div className="relative min-h-[260px] flex items-center justify-center">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={active}
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -18 }}
+            transition={{ duration: 0.38 }}
+            className="bg-card border border-border p-8 md:p-12 text-center max-w-2xl mx-auto w-full"
+            style={{ boxShadow: "0 0 40px hsl(43 90% 50% / 0.06)" }}
+          >
+            <Quote className="h-8 w-8 text-primary/25 mx-auto mb-6" />
+            <p className="text-foreground text-lg leading-relaxed mb-6 font-light">
+              &ldquo;{t(review.textAr, review.textEn)}&rdquo;
+            </p>
+            <div className="flex items-center justify-center gap-0.5 mb-4">
+              {Array.from({ length: review.rating }).map((_, i) => (
+                <span key={i} className="text-primary text-xl">★</span>
+              ))}
+            </div>
+            <p className="font-bold tracking-widest uppercase text-sm">{t(review.nameAr, review.nameEn)}</p>
+            <p className="text-[10px] text-muted-foreground tracking-[0.3em] uppercase mt-1">{t(review.cityAr, review.cityEn)}</p>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+      <div className="flex justify-center gap-2 mt-6">
+        {TESTIMONIALS.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setActive(i)}
+            className={`h-1.5 rounded-full transition-all duration-300 ${i === active ? "w-8 bg-primary" : "w-2 bg-border hover:bg-primary/40"}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const { t } = useLang();
@@ -436,6 +584,54 @@ export default function Home() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24 bg-card/20 border-y border-border">
+        <div className="container mx-auto px-4 max-w-screen-lg">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <p className="text-[10px] tracking-[0.3em] uppercase text-primary mb-4">{t("لديك سؤال؟", "Have a question?")}</p>
+            <h2 className="text-3xl md:text-5xl font-bold tracking-wider mb-4">{t("الأسئلة الشائعة", "FAQ")}</h2>
+            <div className="gold-divider w-24 mx-auto" />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+          >
+            <FaqAccordion />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-24">
+        <div className="container mx-auto px-4 max-w-screen-xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <p className="text-[10px] tracking-[0.3em] uppercase text-primary mb-4">{t("ماذا يقول عملاؤنا", "What our customers say")}</p>
+            <h2 className="text-3xl md:text-5xl font-bold tracking-wider mb-4">{t("آراء العملاء", "Customer Reviews")}</h2>
+            <div className="gold-divider w-24 mx-auto" />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+          >
+            <TestimonialsSlider />
+          </motion.div>
         </div>
       </section>
 

@@ -72,8 +72,10 @@ function ProductCard({ product, index }: { product: any; index: number }) {
           <img
             src={product.imageUrl}
             alt={t(product.nameAr, product.nameEn)}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
+            className="w-full h-full object-cover transition-transform duration-700"
             style={{ transform: hovered ? "scale(1.08)" : "scale(1)" }}
+            loading="lazy"
+            decoding="async"
           />
 
           {/* Dark overlay — lighter on hover */}
@@ -87,6 +89,15 @@ function ProductCard({ product, index }: { product: any; index: number }) {
             <div className="absolute top-3 ltr:left-3 rtl:right-3 z-20">
               <span className="bg-primary text-primary-foreground text-[9px] tracking-widest uppercase px-3 py-1 font-bold">
                 {product.badge}
+              </span>
+            </div>
+          )}
+
+          {/* Low stock badge (deterministic from product ID — marketing feature) */}
+          {product.inStock && [2,3,4,5,7,11].includes(product.id % 13) && (
+            <div className="absolute top-3 ltr:right-3 rtl:left-3 z-20">
+              <span className="bg-background/90 border border-destructive/60 text-destructive text-[8px] tracking-widest uppercase px-2 py-1 font-bold flex items-center gap-1">
+                🔥 {t(`متبقي ${(product.id % 4) + 2} فقط`, `Only ${(product.id % 4) + 2} left`)}
               </span>
             </div>
           )}

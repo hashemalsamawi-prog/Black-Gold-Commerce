@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -15,8 +15,9 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { siteConfig } from "@/data/config";
-import { CheckCircle, Copy } from "lucide-react";
+import { CheckCircle, Copy, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 const EWALLET_IDS = siteConfig.ewallets.map((e) => e.id);
 
@@ -93,7 +94,12 @@ export default function Checkout() {
   const { t, lang } = useLang();
   const sessionId = useCartSession();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const [submitted, setSubmitted] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [pendingFormData, setPendingFormData] = useState<CheckoutForm | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { data: cart, isLoading } = useGetCart(
     { sessionId },
@@ -124,7 +130,20 @@ export default function Checkout() {
   const subtotal = cart?.subtotal ?? 0;
   const deliveryFee = subtotal >= siteConfig.delivery.freeThreshold ? 0 : siteConfig.delivery.fee;
 
-  const onSubmit = (data: CheckoutForm) => {
+  const stopCountdown = () => {
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+  };
+
+  const cancelSubmission = () => {
+    stopCountdown();
+    setCountdown(null);
+    setPendingFormData(null);
+  };
+
+  const fireOrder = (data: CheckoutForm) => {
     const notesWithRef = [
       data.ewalletId ? `المحفظة: ${siteConfig.ewallets.find((e) => e.id === data.ewalletId)?.nameAr}` : null,
       data.transferRef ? `رقم العملية: ${data.transferRef}` : null,
@@ -149,22 +168,56 @@ export default function Checkout() {
       },
       {
         onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetCartQueryKey({ sessionId }) });
           setSubmitted(true);
           const msg = buildWhatsAppMessage(data, cart?.items ?? [], subtotal, deliveryFee, lang, t);
           const url = `https://wa.me/${siteConfig.brand.whatsappNumber}?text=${encodeURIComponent(msg)}`;
-          setTimeout(() => window.open(url, "_blank"), 600);
+          window.open(url, "_blank");
         },
         onError: () => {
+          setCountdown(null);
+          setPendingFormData(null);
           toast({ title: t("حدث خطأ", "Something went wrong"), variant: "destructive" });
         },
       }
     );
   };
 
+  const onSubmit = (data: CheckoutForm) => {
+    if (countdown !== null) return;
+    setPendingFormData(data);
+    setCountdown(3);
+  };
+
+  useEffect(() => {
+    if (countdown === null) return;
+
+    if (countdown === 0) {
+      stopCountdown();
+      setCountdown(null);
+      if (pendingFormData) {
+        fireOrder(pendingFormData);
+      }
+      return;
+    }
+
+    countdownRef.current = setInterval(() => {
+      setCountdown((c) => (c !== null ? c - 1 : null));
+    }, 1000);
+
+    return () => stopCountdown();
+  }, [countdown]);
+
+  useEffect(() => () => stopCountdown(), []);
+
   const copyAccountNumber = (num: string) => {
     navigator.clipboard.writeText(num);
     toast({ title: t("تم النسخ", "Copied!") });
   };
+
+  const isCountingDown = countdown !== null;
+  const isProcessing = createOrder.isPending;
+  const isButtonDisabled = isCountingDown || isProcessing;
 
   if (isLoading) {
     return (
@@ -416,17 +469,48 @@ export default function Checkout() {
                     </div>
                   </div>
                   <div className="gold-divider mb-4" />
-                  <div className="flex justify-between font-bold text-lg mb-8">
+                  <div className="flex justify-between font-bold text-lg mb-6">
                     <span>{t("الإجمالي", "Total")}</span>
                     <span className="text-primary">{(subtotal + deliveryFee).toFixed(0)} {t(siteConfig.delivery.currencyAr, siteConfig.delivery.currencyEn)}</span>
                   </div>
+
+                  {/* Countdown overlay */}
+                  <AnimatePresence>
+                    {isCountingDown && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        className="mb-4 p-4 border border-primary/40 bg-accent/30 text-center"
+                      >
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {t("جاري تحويلك للواتساب...", "Redirecting to WhatsApp...")}
+                          {" "}
+                          <span className="text-primary font-bold text-xl tabular-nums">{countdown}</span>
+                        </p>
+                        <button
+                          type="button"
+                          onClick={cancelSubmission}
+                          className="mt-3 flex items-center gap-2 mx-auto text-xs tracking-widest uppercase text-destructive border border-destructive/40 px-4 py-2 hover:bg-destructive/10 transition-colors"
+                        >
+                          <X className="h-3 w-3" />
+                          {t("إلغاء", "Cancel")}
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   <Button
                     type="submit"
-                    disabled={createOrder.isPending}
-                    className="btn-gold-shimmer w-full h-14 bg-primary text-primary-foreground text-sm tracking-widest uppercase hover:brightness-110"
+                    disabled={isButtonDisabled}
+                    className="btn-gold-shimmer w-full h-14 bg-primary text-primary-foreground text-sm tracking-widest uppercase hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed"
                     data-testid="button-place-order"
                   >
-                    {createOrder.isPending ? t("جاري المعالجة...", "Processing...") : t("تأكيد الطلب عبر واتساب ✓", "Confirm via WhatsApp ✓")}
+                    {isProcessing
+                      ? t("جاري الحفظ...", "Saving...")
+                      : isCountingDown
+                      ? t(`انتظر ${countdown} ث...`, `Wait ${countdown}s...`)
+                      : t("تأكيد الطلب عبر واتساب ✓", "Confirm via WhatsApp ✓")}
                   </Button>
                   <p className="text-[10px] text-muted-foreground text-center mt-3 tracking-wide">
                     {t("سيتم تحويلك إلى واتساب لتأكيد الطلب", "You'll be redirected to WhatsApp to confirm")}

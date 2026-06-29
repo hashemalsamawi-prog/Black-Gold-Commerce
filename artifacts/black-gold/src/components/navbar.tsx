@@ -45,7 +45,7 @@ export function Navbar() {
                 {t("الذهب الأسود", "BLACK GOLD")}
               </span>
               <span className="text-[8px] tracking-[0.2em] uppercase text-primary/50 mt-0.5">
-                {t("حلول متميزة", "Premium & Delivery")}
+                {t("فحم شيشة فاخر", "Premium Charcoal")}
               </span>
             </div>
           </motion.div>

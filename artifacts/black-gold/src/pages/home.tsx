@@ -129,20 +129,27 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Tagline Strip */}
-      <section className="bg-primary/10 border-y border-primary/20 py-4 overflow-hidden">
-        <div className="flex gap-16 animate-none">
-          <div className="flex items-center gap-16 whitespace-nowrap text-[10px] tracking-[0.3em] uppercase text-primary/80 px-8 w-full justify-around">
-            <span>{t("اشتعال سريع", "Quick Ignition")}</span>
-            <span className="text-primary/40">◆</span>
-            <span>{t("احتراق طويل", "Long-Lasting Burn")}</span>
-            <span className="text-primary/40">◆</span>
-            <span>{t("بدون روائح", "Odorless")}</span>
-            <span className="text-primary/40">◆</span>
-            <span>{t("جودة مضمونة", "Quality Guaranteed")}</span>
-            <span className="text-primary/40">◆</span>
-            <span>{t("توصيل سريع", "Fast Delivery")}</span>
-          </div>
+      {/* Tagline Strip — animated marquee */}
+      <section className="bg-primary/10 border-y border-primary/20 py-3.5 overflow-hidden">
+        <div className="marquee-track">
+          {[1, 2].map((copy) => (
+            <div key={copy} className="flex items-center gap-10 whitespace-nowrap text-[10px] tracking-[0.3em] uppercase text-primary/80 px-10">
+              <span>{t("اشتعال سريع", "Quick Ignition")}</span>
+              <span className="text-primary/35">◆</span>
+              <span>{t("احتراق طويل", "Long-Lasting Burn")}</span>
+              <span className="text-primary/35">◆</span>
+              <span>{t("بدون روائح", "Odorless")}</span>
+              <span className="text-primary/35">◆</span>
+              <span>{t("جودة مضمونة", "Quality Guaranteed")}</span>
+              <span className="text-primary/35">◆</span>
+              <span>{t("توصيل سريع", "Fast Delivery")}</span>
+              <span className="text-primary/35">◆</span>
+              <span>{t("فحم طبيعي 100٪", "100% Natural Charcoal")}</span>
+              <span className="text-primary/35">◆</span>
+              <span>{t("عبوات 250غ و500غ", "250g & 500g Packs")}</span>
+              <span className="text-primary/35">◆</span>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -160,7 +167,7 @@ export default function Home() {
             <div className="gold-divider w-24 mx-auto" />
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
             {featured?.slice(0, 4).map((product, i) => (
               <motion.div
                 key={product.id}
@@ -168,36 +175,43 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
+                className="group"
                 data-testid={`featured-product-${product.id}`}
               >
-                <Link href={`/products/${product.id}`} className="group block">
-                  <div className="relative aspect-square overflow-hidden bg-background border border-border mb-4">
+                <Link href={`/products/${product.id}`} className="block">
+                  <div
+                    className="relative overflow-hidden bg-background border border-border mb-0 transition-all duration-500 group-hover:border-primary/50"
+                    style={{ aspectRatio: "3/4", boxShadow: "0 4px 20px rgba(0,0,0,0.5)" }}
+                  >
                     <img
                       src={product.imageUrl}
                       alt={t(product.nameAr, product.nameEn)}
-                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/20 to-transparent" />
                     {product.badge && (
-                      <div className="absolute top-3 ltr:left-3 rtl:right-3 bg-primary text-primary-foreground text-[9px] tracking-widest uppercase px-3 py-1">
+                      <div className="absolute top-3 ltr:left-3 rtl:right-3 bg-primary text-primary-foreground text-[9px] tracking-widest uppercase px-3 py-1 font-bold">
                         {product.badge}
                       </div>
                     )}
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <p className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground mb-1">
+                    {/* Bottom info */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 transition-transform duration-300 group-hover:-translate-y-10">
+                      <p className="text-[9px] tracking-[0.25em] uppercase text-primary/60 mb-1">
                         {t(product.categoryNameAr ?? "", product.categoryNameEn ?? "")}
                       </p>
-                      <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors tracking-wide text-sm">
+                      <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors tracking-wide text-sm leading-tight">
                         {t(product.nameAr, product.nameEn)}
                       </h3>
-                      <p className="text-primary mt-1 font-bold text-lg">
-                        {product.basePrice.toFixed(0)} {t("ر.س", "SAR")}
+                      <p className="text-primary mt-1 font-bold text-xl">
+                        {product.basePrice.toFixed(0)} <span className="text-sm font-normal text-primary/70">{t("ر.س", "SAR")}</span>
                       </p>
                     </div>
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                      <span className="bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-6 py-2 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                    {/* Hover CTA */}
+                    <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+                      <div className="btn-gold-shimmer flex items-center justify-center h-10 bg-primary text-primary-foreground text-[10px] tracking-widest uppercase font-bold"
+                        style={{ boxShadow: "0 0 20px hsl(43 90% 50% / 0.4)" }}>
                         {t("اطلب الآن", "Order Now")}
-                      </span>
+                      </div>
                     </div>
                   </div>
                 </Link>
@@ -271,27 +285,38 @@ export default function Home() {
             {categories?.map((cat, i) => (
               <motion.div
                 key={cat.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
               >
                 <Link
                   href={`/products?category=${cat.id}`}
-                  className="group block relative overflow-hidden aspect-square bg-card border border-border hover:border-primary/50 transition-all"
+                  className="group block relative overflow-hidden bg-card border border-border hover:border-primary/60 transition-all duration-500"
+                  style={{ aspectRatio: "1/1" }}
                   data-testid={`link-category-${cat.id}`}
                 >
                   {cat.imageUrl && (
                     <img
                       src={cat.imageUrl}
                       alt={t(cat.nameAr, cat.nameEn)}
-                      className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity duration-500 group-hover:scale-105 duration-700"
+                      className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+                      style={{ opacity: 0.72 }}
                     />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/50 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-4 text-center">
-                    <p className="font-semibold text-sm tracking-wide group-hover:text-primary transition-colors">{t(cat.nameAr, cat.nameEn)}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">{cat.productCount} {t("منتج", "products")}</p>
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/55 to-transparent transition-opacity duration-500 group-hover:opacity-80" />
+                  {/* Gold border glow on hover */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{ boxShadow: "inset 0 0 0 1px hsl(43 90% 50% / 0.5)" }} />
+                  <div className="absolute bottom-0 left-0 right-0 p-5 text-center">
+                    <p className="font-bold text-base tracking-wide group-hover:text-primary transition-colors duration-300">
+                      {t(cat.nameAr, cat.nameEn)}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-1.5 tracking-widest uppercase">
+                      {cat.productCount} {t("منتج", "products")}
+                    </p>
+                    <div className="h-px bg-primary/0 group-hover:bg-primary/60 mx-auto w-0 group-hover:w-12 transition-all duration-500 mt-2" />
                   </div>
                 </Link>
               </motion.div>

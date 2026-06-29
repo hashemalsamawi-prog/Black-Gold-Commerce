@@ -327,6 +327,35 @@
     animation: ember-flicker 2.4s ease-in-out infinite;
   }
 
+  /* ── Marquee scrolling strip ── */
+  @keyframes marquee-rtl {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  @keyframes marquee-ltr {
+    0%   { transform: translateX(-50%); }
+    100% { transform: translateX(0); }
+  }
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee-rtl 22s linear infinite;
+  }
+  :lang(ar) .marquee-track {
+    animation: marquee-rtl 22s linear infinite;
+  }
+  :not(:lang(ar)) .marquee-track {
+    animation: marquee-ltr 22s linear infinite;
+  }
+
+  /* ── Hover scale precise ── */
+  .product-card-img {
+    transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .product-card-img:hover {
+    transform: scale(1.08);
+  }
+
   /* ── Divider line ── */
   .gold-divider {
     height: 1px;

@@ -86,11 +86,18 @@ export default function Cart() {
             <p className="text-muted-foreground mb-8">
               {t("ابدأ التسوق من مجموعتنا الفاخرة", "Start shopping from our premium collection")}
             </p>
-            <Link href="/products">
-              <Button className="bg-primary text-primary-foreground h-12 px-8 tracking-widest uppercase" data-testid="button-continue-shopping">
-                {t("تسوق الآن", "Shop Now")}
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/products">
+                <Button className="bg-primary text-primary-foreground h-12 px-8 tracking-widest uppercase" data-testid="button-continue-shopping">
+                  {t("تسوق الآن", "Shop Now")}
+                </Button>
+              </Link>
+              <Link href="/products?sort=bestsellers">
+                <Button variant="outline" className="h-12 px-8 tracking-widest uppercase border-primary/40 text-primary hover:bg-primary/10" data-testid="button-best-sellers">
+                  🔥 {t("الأكثر مبيعاً", "Shop Best Sellers")}
+                </Button>
+              </Link>
+            </div>
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">

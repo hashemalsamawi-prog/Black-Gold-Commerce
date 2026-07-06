@@ -1,0 +1,23 @@
+{
+  "name": "الذهب الأسود — فحم شيشة فاخر",
+  "short_name": "Black Gold",
+  "description": "فحم شيشة فاخر بجودة لا مثيل لها. اشتعال سريع، احتراق طويل، وبدون روائح.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#c9981a",
+  "orientation": "portrait-primary",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["shopping"],
+  "icons": [
+    { "src": "/brand/logo-transparent.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/brand/logo-transparent.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    { "name": "المنتجات", "short_name": "منتجات", "url": "/products", "description": "تصفح جميع المنتجات" },
+    { "name": "سلة التسوق", "short_name": "سلة", "url": "/cart", "description": "عرض السلة" }
+  ]
+}

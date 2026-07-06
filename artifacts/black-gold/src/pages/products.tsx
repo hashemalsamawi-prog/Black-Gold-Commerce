@@ -283,28 +283,6 @@ export default function Products() {
             >
               <div className="p-6 bg-card border border-border grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <p className="text-xs tracking-widest uppercase text-muted-foreground mb-3">{t("الفئة", "Category")}</p>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => setSelectedCategory(null)}
-                      className={`px-4 py-1.5 text-xs border transition-all ${!selectedCategory ? "border-primary text-primary bg-accent" : "border-border text-muted-foreground hover:border-primary/50"}`}
-                      data-testid="filter-category-all"
-                    >
-                      {t("الكل", "All")}
-                    </button>
-                    {categories?.map((cat) => (
-                      <button
-                        key={cat.id}
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`px-4 py-1.5 text-xs border transition-all ${selectedCategory === cat.id ? "border-primary text-primary bg-accent" : "border-border text-muted-foreground hover:border-primary/50"}`}
-                        data-testid={`filter-category-${cat.id}`}
-                      >
-                        {t(cat.nameAr, cat.nameEn)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
                   <p className="text-xs tracking-widest uppercase text-muted-foreground mb-3">{t("السعر من", "Min Price")}</p>
                   <Input
                     type="number"
@@ -331,11 +309,11 @@ export default function Products() {
           )}
         </AnimatePresence>
 
-        {/* Category Pills */}
-        <div className="flex gap-2 mb-10 flex-wrap">
+        {/* Category Pills — single horizontal scrollable row */}
+        <div className="flex gap-2 mb-10 overflow-x-auto pb-2 scrollbar-none" style={{ scrollbarWidth: "none" }}>
           <button
             onClick={() => setSelectedCategory(null)}
-            className={`px-5 py-2 text-[10px] tracking-widest uppercase border transition-all duration-200 ${!selectedCategory ? "bg-primary text-primary-foreground border-primary shadow-[0_0_12px_hsl(43_90%_50%/0.35)]" : "border-border text-muted-foreground hover:border-primary/60 hover:text-primary"}`}
+            className={`flex-shrink-0 px-5 py-2 text-[10px] tracking-widest uppercase border transition-all duration-200 ${!selectedCategory ? "bg-primary text-primary-foreground border-primary shadow-[0_0_12px_hsl(43_90%_50%/0.35)]" : "border-border text-muted-foreground hover:border-primary/60 hover:text-primary"}`}
           >
             {t("الكل", "All")}
           </button>
@@ -343,7 +321,7 @@ export default function Products() {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-5 py-2 text-[10px] tracking-widest uppercase border transition-all duration-200 ${selectedCategory === cat.id ? "bg-primary text-primary-foreground border-primary shadow-[0_0_12px_hsl(43_90%_50%/0.35)]" : "border-border text-muted-foreground hover:border-primary/60 hover:text-primary"}`}
+              className={`flex-shrink-0 px-5 py-2 text-[10px] tracking-widest uppercase border transition-all duration-200 ${selectedCategory === cat.id ? "bg-primary text-primary-foreground border-primary shadow-[0_0_12px_hsl(43_90%_50%/0.35)]" : "border-border text-muted-foreground hover:border-primary/60 hover:text-primary"}`}
             >
               {t(cat.nameAr, cat.nameEn)}
             </button>

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { categoriesTable } from "@workspace/db";

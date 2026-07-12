@@ -4,6 +4,9 @@ import pg from "pg";
 
 const { Pool } = pg;
 
+// سطر التجربة للتأكد من قراءة المتغير في الـ Logs
+console.log("Database URL is set:", !!process.env.DATABASE_URL);
+
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set.");
 }
@@ -15,7 +18,7 @@ const pool = new Pool({
   },
 });
 
-import * as schema from "./schema/index.js";
+import * as schema from "./schema";
 export const db = drizzle(pool, { schema });
 
-export * from "./schema/index.js";
+export * from "./schema";

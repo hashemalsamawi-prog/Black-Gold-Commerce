@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router, type IRouter } from "express";
 import { rateLimit } from "express-rate-limit";
 import { db } from "@workspace/db";

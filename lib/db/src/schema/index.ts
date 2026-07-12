@@ -1,8 +1,8 @@
 // @ts-nocheck
-export * from "./categories";
-export * from "./products";
-export * from "./variants";
-export * from "./cart";
-export * from "./customers";
-export * from "./orders";
-export * from "./wholesale";
+export * from "./categories.js";
+export * from "./products.js";
+export * from "./variants.js";
+export * from "./cart.js";
+export * from "./customers.js";
+export * from "./orders.js";
+export * from "./wholesale.js";

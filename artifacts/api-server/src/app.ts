@@ -4,12 +4,12 @@ import cors from "cors";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import pinoHttp from "pino-http";
-import router from "./routes";
-import { logger } from "./lib/logger";
+import router from "./routes/index.js";
+import { logger } from "./lib/logger.js";
 
 const app: Express = express();
 
-/* ── Security headers (Helmet) ── */
+/* --- Security headers (Helmet) --- */
 app.use(
   helmet({
     contentSecurityPolicy: false, // Disabled for API-only server (frontend handles CSP)
@@ -17,7 +17,7 @@ app.use(
   }),
 );
 
-/* ── Global rate limiter: 120 requests per minute per IP ── */
+/* --- Global rate limiter: 120 requests per minute per IP --- */
 const globalLimiter = rateLimit({
   windowMs: 60_000,
   max: 120,
@@ -36,7 +36,7 @@ app.use(
         return {
           id: req.id,
           method: req.method,
-          url: req.url?.split("?")[0],
+          url: req.url.split("?")[0],
         };
       },
       res(res) {

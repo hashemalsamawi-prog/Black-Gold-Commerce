@@ -9,7 +9,8 @@ globalThis.require = createRequire(import.meta.url);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distDir = path.join(__dirname, "dist");
-const vercelOutputDir = path.join(__dirname, ".vercel", "output");
+// التغيير هنا: أصبح المسار إلى جذر المشروع وليس داخل artifacts
+const vercelOutputDir = path.join(__dirname, "../../.vercel", "output");
 const funcDir = path.join(vercelOutputDir, "functions", "index.func");
 
 async function build() {
@@ -25,11 +26,9 @@ async function build() {
     bundle: true,
     format: "esm",
     outdir: distDir,
-    outExtension: { ".js": ".mjs" }, // نحافظ على .mjs كما كنت تستخدم
+    outExtension: { ".js": ".mjs" },
     logLevel: "info",
-    // لا نستثني الحزم الداخلية (workspace) بل نضمنها في البundle
     external: [
-      // نستثني فقط الحزم التي لا يمكن تضمينها (كما في قائمتك السابقة)
       "*.node",
       "sharp",
       "better-sqlite3",
@@ -102,6 +101,57 @@ async function build() {
       "puppeteer",
       "puppeteer-core",
       "electron",
+    ],
+    sourcemap: "linked",
+    plugins: [
+      esbuildPluginPino({ transports: ["pino-pretty"] })
+    ],
+    banner: {
+      js: `import { createRequire as __bannerCrReq } from 'node:module';
+import __bannerPath from 'node:path';
+import __bannerUrl from 'node:url';
+
+globalThis.require = __bannerCrReq(import.meta.url);
+globalThis.__filename = __bannerUrl.fileURLToPath(import.meta.url);
+globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
+      `,
+    },
+  });
+
+  // 3. إنشاء هيكل مجلدات فيرسل
+  await mkdir(funcDir, { recursive: true });
+
+  // 4. نسخ ملف index.mjs من dist إلى مجلد الدالة
+  await copyFile(
+    path.join(distDir, "index.mjs"),
+    path.join(funcDir, "index.mjs")
+  );
+
+  // 5. إنشاء config.json لتوجيه كل الطلبات إلى الدالة
+  await writeFile(
+    path.join(vercelOutputDir, "config.json"),
+    JSON.stringify({
+      routes: [{ src: "/(.*)", dest: "/index" }]
+    }, null, 2)
+  );
+
+  // 6. إنشاء .vc-config.json لتحديد بيئة التشغيل
+  await writeFile(
+    path.join(funcDir, ".vc-config.json"),
+    JSON.stringify({
+      runtime: "nodejs20.x",
+      handler: "index.mjs",
+      launcherType: "Nodejs"
+    }, null, 2)
+  );
+
+  console.log("✅ تم بناء المشروع وتجهيزه لفيرسل بنجاح!");
+}
+
+build().catch((err) => {
+  console.error("❌ فشل البناء:", err);
+  process.exit(1);
+});      "electron",
     ],
     sourcemap: "linked",
     plugins: [

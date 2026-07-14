@@ -1,0 +1,7 @@
+ ```json
+   {
+     "version": 2,
+     "buildCommand": "cd artifacts/api-server && npm run vercel-build",
+     "outputDirectory": "artifacts/api-server/.vercel/output"
+   }
+   ```

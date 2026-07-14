@@ -9,16 +9,13 @@ globalThis.require = createRequire(import.meta.url);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distDir = path.join(__dirname, "dist");
-// التغيير هنا: أصبح المسار إلى جذر المشروع وليس داخل artifacts
 const vercelOutputDir = path.join(__dirname, "../../.vercel", "output");
 const funcDir = path.join(vercelOutputDir, "functions", "index.func");
 
 async function build() {
-  // 1. حذف المجلدات القديمة
   await rm(distDir, { recursive: true, force: true });
   await rm(vercelOutputDir, { recursive: true, force: true });
 
-  // 2. بناء المشروع باستخدام esbuild (يخرج إلى dist)
   await esbuild({
     entryPoints: [path.join(__dirname, "src/index.ts")],
     platform: "node",
@@ -29,6 +26,8 @@ async function build() {
     outExtension: { ".js": ".mjs" },
     logLevel: "info",
     external: [
+      // إضافة الحزم الداخلية workspace كخارجية
+      "@workspace/*",
       "*.node",
       "sharp",
       "better-sqlite3",
@@ -102,6 +101,52 @@ async function build() {
       "puppeteer-core",
       "electron",
     ],
+    sourcemap: "linked",
+    plugins: [
+      esbuildPluginPino({ transports: ["pino-pretty"] })
+    ],
+    banner: {
+      js: `import { createRequire as __bannerCrReq } from 'node:module';
+import __bannerPath from 'node:path';
+import __bannerUrl from 'node:url';
+
+globalThis.require = __bannerCrReq(import.meta.url);
+globalThis.__filename = __bannerUrl.fileURLToPath(import.meta.url);
+globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
+      `,
+    },
+  });
+
+  await mkdir(funcDir, { recursive: true });
+
+  await copyFile(
+    path.join(distDir, "index.mjs"),
+    path.join(funcDir, "index.mjs")
+  );
+
+  await writeFile(
+    path.join(vercelOutputDir, "config.json"),
+    JSON.stringify({
+      routes: [{ src: "/(.*)", dest: "/index" }]
+    }, null, 2)
+  );
+
+  await writeFile(
+    path.join(funcDir, ".vc-config.json"),
+    JSON.stringify({
+      runtime: "nodejs20.x",
+      handler: "index.mjs",
+      launcherType: "Nodejs"
+    }, null, 2)
+  );
+
+  console.log("✅ تم بناء المشروع وتجهيزه لفيرسل بنجاح!");
+}
+
+build().catch((err) => {
+  console.error("❌ فشل البناء:", err);
+  process.exit(1);
+});    ],
     sourcemap: "linked",
     plugins: [
       esbuildPluginPino({ transports: ["pino-pretty"] })

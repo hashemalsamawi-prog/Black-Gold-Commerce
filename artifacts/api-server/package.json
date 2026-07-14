@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "export NODE_ENV=development && pnpm run build && pnpm run start",
+    "dev": "export NODE_ENV=development && node ./build.mjs && node ./dist/index.mjs",
     "build": "node ./build.mjs",
+    "vercel-build": "npm run build",
     "start": "node ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

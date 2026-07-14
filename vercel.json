@@ -1,5 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "cd artifacts/api-server && pnpm install && pnpm run build",
+  "installCommand": "pnpm install --no-frozen-lockfile",
+  "buildCommand": "pnpm run build --filter @workspace/api-server",
   "outputDirectory": "artifacts/api-server/.vercel/output"
 }
